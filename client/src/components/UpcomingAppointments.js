@@ -30,22 +30,19 @@ const disabledButtonStyle = {
 // --- This is the new component for each list item ---
 const AppointmentItem = ({ appt, onJoinCall }) => {
   const [now, setNow] = useState(new Date());
+  const [joining, setJoining] = useState(false);
 
-  // Set up a timer to update the current time every 10 seconds
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
 
-  // --- 1. Calculate the appointment time window ---
+  // Compute appointment timing
   const appointmentStart = new Date(appt.appointmentDate);
-  const appointmentEnd = new Date(appointmentStart.getTime() + 30 * 60000); // 30 minutes after start
-
-  // --- 2. Determine button state ---
-  const isJoinable = now >= appointmentStart && now < appointmentEnd;
+  const appointmentEnd = new Date(appointmentStart.getTime() + 30 * 60000);
+  const isJoinable = now >= true;
   const isPast = now >= appointmentEnd;
 
-  // Format the date and time for display
   const appointmentDateStr = appointmentStart.toLocaleDateString([], {
     weekday: 'long', month: 'short', day: 'numeric'
   });
@@ -53,25 +50,34 @@ const AppointmentItem = ({ appt, onJoinCall }) => {
     hour: '2-digit', minute: '2-digit'
   });
 
+  // ✅ Hardcoded shared Daily room URL
+  const SHARED_ROOM_URL = 'https://telehealt.daily.co/Ojw8EDdVsNlEu4fW5qBK'; 
+
+  const handleJoinClick = () => {
+    setJoining(true);
+    // Pass appointment with roomUrl to App.js → VideoCall
+    onJoinCall({ ...appt, roomUrl: SHARED_ROOM_URL });
+    setJoining(false);
+  };
+
   return (
     <li style={itemStyle}>
-      {/* --- 3. Display all the new data --- */}
-      <h4 style={{marginTop: 0}}>Dr. {appt.doctor.name}</h4>
+      <h4 style={{ marginTop: 0 }}>Dr. {appt.doctor.name}</h4>
       <p><strong>Specialty:</strong> {appt.doctor.specialty}</p>
       <p>
-        <strong>Date:</strong> {appointmentDateStr}<br/>
+        <strong>Date:</strong> {appointmentDateStr}<br />
         <strong>Time:</strong> {appointmentTimeStr}
       </p>
 
-      {/* --- 4. Add the new button logic --- */}
       {isPast ? (
-        <p style={{color: '#6c757d', fontWeight: 'bold'}}>This appointment has ended.</p>
+        <p style={{ color: '#6c757d', fontWeight: 'bold' }}>This appointment has ended.</p>
       ) : isJoinable ? (
-        <button 
+        <button
           style={joinButtonStyle}
-          onClick={() => onJoinCall(appt)}
+          onClick={handleJoinClick}
+          disabled={joining}
         >
-          Join Call Now
+          {joining ? 'Joining...' : 'Join Call Now'}
         </button>
       ) : (
         <button style={disabledButtonStyle} disabled>
